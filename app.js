@@ -3,23 +3,22 @@ const API_KEY = '43f9a1f7de75798dd6da8340511b9657';  // Replace with your actual
 const API_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 // Function to fetch weather data
-function getWeather(city) {
-    // Build the complete URL
-    const url = `${API_URL}?q=${city}&appid=${API_KEY}&units=metric`;
-    
-    // Make API call using Axios
-    axios.get(url)
-        .then(function(response) {
-            // Success! We got the data
-            console.log('Weather Data:', response.data);
-            displayWeather(response.data);
-        })
-        .catch(function(error) {
-            // Something went wrong
-            console.error('Error fetching weather:', error);
-            document.getElementById('weather-display').innerHTML = 
-                '<p class="loading">Could not fetch weather data. Please try again.</p>';
-        });
+async function getWeather(city) {
+  const url = `${API_URL}?q=${city}&appid=${API_KEY}&units=metric`;
+
+  // Show loading
+  document.getElementById("weather-display").innerHTML =
+    `<p class="loading">Loading weather data...</p>`;
+
+  try {
+    const response = await axios.get(url);
+    const data = response.data;
+
+    displayWeather(data);
+  } catch (error) {
+    document.getElementById("weather-display").innerHTML =
+      `<p class="loading">City not found 😢</p>`;
+  }
 }
 
 // Function to display weather data
@@ -44,6 +43,26 @@ function displayWeather(data) {
     // Put it on the page
     document.getElementById('weather-display').innerHTML = weatherHTML;
 }
+
+const searchBtn = document.getElementById("search-btn");
+const cityInput = document.getElementById("city-input");
+
+searchBtn.addEventListener("click", () => {
+  const city = cityInput.value.trim();
+
+  if (city === "") {
+    document.getElementById("weather-display").innerHTML =
+      `<p class="loading">Please enter a city name ⚠️</p>`;
+    return;
+  }
+
+  getWeather(city);
+});
+cityInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    searchBtn.click();
+  }
+});
 
 // Call the function when page loads
 getWeather('London');
