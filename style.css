@@ -122,3 +122,32 @@ h1 {
   text-align: center;
   flex: 1;
 }
+#recent-container {
+  margin-top: 20px;
+  text-align: left;
+}
+
+#recent-container h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+#recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.recent-btn {
+  padding: 6px 12px;
+  border: none;
+  background: #eee;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.recent-btn:hover {
+  background: #667eea;
+  color: white;
+}
