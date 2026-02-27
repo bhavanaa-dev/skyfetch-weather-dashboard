@@ -1,16 +1,15 @@
-// Weather App Constructor
 function WeatherApp() {
-  this.API_KEY = "43f9a1f7de75798dd6da8340511b9657"; // put your key here
+  this.API_KEY = "43f9a1f7de75798dd6da8340511b9657"; // keep your key
   this.BASE_URL = "https://api.openweathermap.org/data/2.5";
 
   this.cityInput = document.getElementById("city-input");
   this.searchBtn = document.getElementById("search-btn");
   this.display = document.getElementById("weather-display");
+  this.recentList = document.getElementById("recent-list");
 
   this.init();
 }
 
-// Initialize app
 WeatherApp.prototype.init = function () {
   this.searchBtn.addEventListener("click", this.handleSearch.bind(this));
 
@@ -18,10 +17,11 @@ WeatherApp.prototype.init = function () {
     if (e.key === "Enter") this.handleSearch();
   });
 
-  this.getWeather("London"); // default
+  this.loadRecent();
+  this.loadLastCity();
 };
 
-// Handle search
+// 🔍 Handle search
 WeatherApp.prototype.handleSearch = function () {
   const city = this.cityInput.value.trim();
 
@@ -30,10 +30,11 @@ WeatherApp.prototype.handleSearch = function () {
     return;
   }
 
+  this.saveToLocal(city);
   this.getWeather(city);
 };
 
-// Fetch current + forecast using Promise.all
+// 🌦️ Fetch weather
 WeatherApp.prototype.getWeather = async function (city) {
   this.display.innerHTML = `<p class="loading">Loading weather data...</p>`;
 
@@ -52,15 +53,65 @@ WeatherApp.prototype.getWeather = async function (city) {
   }
 };
 
-// Render both current + forecast
+// 💾 Save to localStorage
+WeatherApp.prototype.saveToLocal = function (city) {
+  let recent = JSON.parse(localStorage.getItem("recentCities")) || [];
+
+  // remove duplicates
+  recent = recent.filter(c => c.toLowerCase() !== city.toLowerCase());
+
+  recent.unshift(city);
+
+  // keep only 5
+  recent = recent.slice(0, 5);
+
+  localStorage.setItem("recentCities", JSON.stringify(recent));
+  localStorage.setItem("lastCity", city);
+
+  this.loadRecent();
+};
+
+// 📂 Load recent searches
+WeatherApp.prototype.loadRecent = function () {
+  const recent = JSON.parse(localStorage.getItem("recentCities")) || [];
+
+  this.recentList.innerHTML = "";
+
+  recent.forEach(city => {
+    const btn = document.createElement("button");
+    btn.className = "recent-btn";
+    btn.textContent = city;
+
+    btn.addEventListener("click", () => {
+      this.cityInput.value = city;
+      this.getWeather(city);
+    });
+
+    this.recentList.appendChild(btn);
+  });
+};
+
+// 🔁 Load last searched city on refresh
+WeatherApp.prototype.loadLastCity = function () {
+  const lastCity = localStorage.getItem("lastCity");
+
+  if (lastCity) {
+    this.cityInput.value = lastCity;
+    this.getWeather(lastCity);
+  } else {
+    this.getWeather("London");
+  }
+};
+
+// 🖥️ Render UI
 WeatherApp.prototype.renderAll = function (currentData, forecastData) {
-  this.display.innerHTML = ""; // clear previous
+  this.display.innerHTML = "";
 
   this.display.appendChild(this.createCurrentWeather(currentData));
   this.display.appendChild(this.createForecast(forecastData));
 };
 
-// Create current weather UI
+// 🌡️ Current weather
 WeatherApp.prototype.createCurrentWeather = function (data) {
   const container = document.createElement("div");
   container.className = "weather-info";
@@ -80,15 +131,14 @@ WeatherApp.prototype.createCurrentWeather = function (data) {
   return container;
 };
 
-// Create forecast UI
+// 📅 Forecast
 WeatherApp.prototype.createForecast = function (data) {
   const container = document.createElement("div");
   container.className = "forecast-container";
 
-  // pick 1 data per day (every 8 items)
   const daily = data.list.filter((_, index) => index % 8 === 0);
 
-  daily.forEach((item) => {
+  daily.forEach(item => {
     const day = new Date(item.dt_txt).toLocaleDateString("en-US", {
       weekday: "short",
     });
@@ -111,5 +161,5 @@ WeatherApp.prototype.createForecast = function (data) {
   return container;
 };
 
-// Start app
+// 🚀 Start app
 new WeatherApp();
